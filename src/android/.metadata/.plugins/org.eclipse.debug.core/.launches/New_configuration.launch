@@ -9,13 +9,22 @@
 <stringAttribute key="com.android.ide.eclipse.adt.target" value="MANUAL"/>
 <booleanAttribute key="com.android.ide.eclipse.adt.wipedata" value="false"/>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+<<<<<<< HEAD
 <listEntry value="/DummyApp"/>
 <listEntry value="/DummyApp/AndroidManifest.xml"/>
+=======
+<listEntry value="/AndroidClient"/>
+<listEntry value="/AndroidClient/AndroidManifest.xml"/>
+>>>>>>> f68dafcff8404b4158e408d81a7abfa85981ec93
 </listAttribute>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
 <listEntry value="4"/>
 <listEntry value="1"/>
 </listAttribute>
 <booleanAttribute key="org.eclipse.jdt.launching.ALLOW_TERMINATE" value="true"/>
+<<<<<<< HEAD
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="DummyApp"/>
+=======
+<stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="AndroidClient"/>
+>>>>>>> f68dafcff8404b4158e408d81a7abfa85981ec93
 </launchConfiguration>
