@@ -1,3 +1,10 @@
+<<<<<<< HEAD
+activeuserprofiles=PRODUCT;Team
+eclipse.preferences.version=1
+org.eclipse.rse.systemtype.local.systemType.defaultUserId=BTPR
+useridperkey=PRODUCT.Local\=BTPR;
+=======
 activeuserprofiles=BTProxy;Team
 eclipse.preferences.version=1
 org.eclipse.rse.systemtype.local.systemType.defaultUserId=Itay
+>>>>>>> 5be5a0f99d64bafdd3b963e6e4659c63994c8e51

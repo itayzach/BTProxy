@@ -1,4 +1,13 @@
+<<<<<<< HEAD
+INDEX VERSION 1.127+C:\Users\BTPR\Documents\GitHub\BTProxy\src\android\.metadata\.plugins\org.eclipse.jdt.core
+3242094601.index
+589964571.index
+757160323.index
+22507792.index
+3515282563.index
+=======
 INDEX VERSION 1.127+C:\Users\Itay\Documents\GitHub\BTProxy\src\android\.metadata\.plugins\org.eclipse.jdt.core
 1908993951.index
 2893363716.index
 1517968309.index
+>>>>>>> 5be5a0f99d64bafdd3b963e6e4659c63994c8e51

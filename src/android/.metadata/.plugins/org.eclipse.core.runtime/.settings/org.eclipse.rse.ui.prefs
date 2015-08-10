@@ -1,2 +1,6 @@
 eclipse.preferences.version=1
+<<<<<<< HEAD
+org.eclipse.rse.preferences.order.connections=PRODUCT.Local
+=======
 org.eclipse.rse.preferences.order.connections=BTProxy.Local
+>>>>>>> 5be5a0f99d64bafdd3b963e6e4659c63994c8e51
