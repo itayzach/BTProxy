@@ -1,0 +1,20 @@
+﻿Build started 5/31/2015 11:07:59 AM.
+     1>Project "C:\Users\Itay\Documents\Visual Studio 2013\Projects\19.5 try\HookDll\HookDll.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\CL.exe /c /I"C:\Users\Itay\Documents\Visual Studio 2013\Projects\19.5 try\DummyApp" /Zi /nologo /W3 /WX- /sdl /Od /D WIN32 /D _DEBUG /D _WINDOWS /D _USRDLL /D HOOKDLL_EXPORTS /D _WINDLL /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"x64\Debug\\" /Fd"x64\Debug\vc120.pdb" /Gd /TP /errorReport:prompt dllmain.cpp
+         dllmain.cpp
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Itay\Documents\Visual Studio 2013\Projects\19.5 try\HookDll\x64\Debug\HookDll.dll" /INCREMENTAL /NOLOGO /LIBPATH:C:\Detours\lib.X86\ kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Itay\Documents\Visual Studio 2013\Projects\19.5 try\HookDll\x64\Debug\HookDll.pdb" /SUBSYSTEM:WINDOWS /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Itay\Documents\Visual Studio 2013\Projects\19.5 try\HookDll\x64\Debug\HookDll.lib" /MACHINE:X64 /DLL x64\Debug\dllmain.obj
+            Creating library C:\Users\Itay\Documents\Visual Studio 2013\Projects\19.5 try\HookDll\x64\Debug\HookDll.lib and object C:\Users\Itay\Documents\Visual Studio 2013\Projects\19.5 try\HookDll\x64\Debug\HookDll.exp
+     1>dllmain.obj : error LNK2019: unresolved external symbol DetourTransactionBegin referenced in function DllMain
+     1>dllmain.obj : error LNK2019: unresolved external symbol DetourTransactionCommit referenced in function DllMain
+     1>dllmain.obj : error LNK2019: unresolved external symbol DetourUpdateThread referenced in function DllMain
+     1>dllmain.obj : error LNK2019: unresolved external symbol DetourAttach referenced in function DllMain
+     1>dllmain.obj : error LNK2019: unresolved external symbol DetourDetach referenced in function DllMain
+     1>dllmain.obj : error LNK2019: unresolved external symbol DetourIsHelperProcess referenced in function DllMain
+     1>C:\Users\Itay\Documents\Visual Studio 2013\Projects\19.5 try\HookDll\x64\Debug\HookDll.dll : fatal error LNK1120: 6 unresolved externals
+     1>Done Building Project "C:\Users\Itay\Documents\Visual Studio 2013\Projects\19.5 try\HookDll\HookDll.vcxproj" (Build target(s)) -- FAILED.
+
+Build FAILED.
+
+Time Elapsed 00:00:01.06
