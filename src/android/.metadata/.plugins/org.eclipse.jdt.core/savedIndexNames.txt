@@ -1,0 +1,6 @@
+INDEX VERSION 1.127+C:\Users\BTPR\Documents\GitHub\BTProxy\src\android\.metadata\.plugins\org.eclipse.jdt.core
+3242094601.index
+589964571.index
+757160323.index
+22507792.index
+3515282563.index
