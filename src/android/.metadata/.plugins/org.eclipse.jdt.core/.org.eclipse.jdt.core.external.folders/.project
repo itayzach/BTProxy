@@ -12,7 +12,11 @@
 		<link>
 			<name>.link0</name>
 			<type>2</type>
+<<<<<<< HEAD
 			<location>C:/Users/BTPR/AppData/Local/Android/sdk/sources/android-18</location>
+=======
+			<location>C:/Users/Itay/AppData/Local/Android/sdk/sources/android-18</location>
+>>>>>>> 5be5a0f99d64bafdd3b963e6e4659c63994c8e51
 		</link>
 	</linkedResources>
 </projectDescription>

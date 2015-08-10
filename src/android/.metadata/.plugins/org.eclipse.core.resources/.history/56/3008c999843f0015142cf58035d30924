@@ -26,7 +26,7 @@ public class MainActivity extends Activity {
 	   
 	// Well known SPP UUID
 	private static final UUID MY_UUID =
-	UUID.fromString("00001106-0000-1000-8000-00805F9B34FB");
+	UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 	 
 	// Insert your server's MAC address
 	//private static String address = "00:11:67:8A:6D:49"; // BTProxy MAC
