@@ -1,6 +1,10 @@
 com.android.ide.eclipse.adt.fixLegacyEditors=1
 <<<<<<< HEAD
+<<<<<<< HEAD
 com.android.ide.eclipse.adt.sdk=C\:\\Users\\Itay\\AppData\\Local\\Android\\sdk
+=======
+com.android.ide.eclipse.adt.sdk=C\:\\Users\\BTPR\\AppData\\Local\\Android\\sdk
+>>>>>>> f68dafcff8404b4158e408d81a7abfa85981ec93
 =======
 com.android.ide.eclipse.adt.sdk=C\:\\Users\\BTPR\\AppData\\Local\\Android\\sdk
 >>>>>>> f68dafcff8404b4158e408d81a7abfa85981ec93
