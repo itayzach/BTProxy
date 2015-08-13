@@ -1,19 +1,17 @@
-Name										Value									Size
-Base UUID Value 							0x00000000-0000-1000-8000-00805F9B34FB	128-bit
-SDP											0x0001									16-bit
-RFCOMM										0x0003									16-bit
-OBEX										0x0008									16-bit
-HTTP										0x000C									16-bit
-L2CAP										0x0100									16-bit
-BNEP										0x000F									16-bit
-Serial Port									0x1101									16-bit
-ServiceDiscoveryServerServiceClassID		0x1000									16-bit
-BrowseGroupDescriptorServiceClassID			0x1001									16-bit
-PublicBrowseGroup							0x1002									16-bit
-OBEX Object Push Profile					0x1105									16-bit
-OBEX File Transfer Profile					0x1106									16-bit
-Personal Area Networking User				0x1115									16-bit
-Network Access Point						0x1116									16-bit
-Group Network								0x1117									16-bit
-
-											00001106-0000-1000-8000-00805F9B34FB
+Name										Value										Size
+Base UUID Value 							0x00000000-0000-1000-8000-00805F9B34FB		128-bit
+SDP											0x00000001									16-bit
+RFCOMM										0x00000003									16-bit
+OBEX										0x00000008									16-bit
+HTTP										0x0000000C									16-bit
+L2CAP										0x00000100									16-bit
+BNEP										0x0000000F									16-bit
+Serial Port									0x00001101									16-bit
+ServiceDiscoveryServerServiceClassID		0x00001000									16-bit
+BrowseGroupDescriptorServiceClassID			0x00001001									16-bit
+PublicBrowseGroup							0x00001002									16-bit
+OBEX Object Push Profile					0x00001105									16-bit
+OBEX File Transfer Profile					0x00001106									16-bit
+Personal Area Networking User				0x00001115									16-bit
+Network Access Point						0x00001116									16-bit
+Group Network								0x00001117									16-bit
