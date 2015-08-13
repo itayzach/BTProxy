@@ -18,7 +18,8 @@ int main(int argc, char **argv)
 	SOCKET s, s2;
 	SOCKADDR_BTH sab, sab2;
 	// NULL_GUID 
-	GUID nguiD = {00000000-0000-0000-0000-000000000000};
+	GUID nguiD = SerialPortServiceClass_UUID;
+	//given : GUID nguiD = {00000000-0000-0000-0000-000000000000};
 	int ilen, iResult;
 
 	// This should be const void * type for non-char data
@@ -47,7 +48,8 @@ int main(int argc, char **argv)
 	memset (&sab, 0, sizeof(sab));
 	sab.addressFamily  = AF_BTH;
 	// We hardcoded it
-	sab.port = 1;
+	sab.port = BT_PORT_ANY;
+	// given: sab.port = 1;
 
 	if (0 != bind(s, (SOCKADDR *) &sab, sizeof(sab)))
 	{
