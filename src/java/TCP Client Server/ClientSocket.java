@@ -6,12 +6,12 @@ public class ClientSocket {
   public void run() {
 	try {
 		int serverPort = 4020;
-		//byte[] ipAddr = new byte[]{132, 68, 60, 114};
-		InetAddress host = InetAddress.getByName("132.68.60.114"); 
+		//byte[] ipAddr = new byte[]{132, 68, 60, 117};
+		InetAddress host = InetAddress.getByName("132.68.60.117"); 
 		System.out.println("Connecting to server on port " + serverPort); 
 
 		Socket socket = new Socket(host,serverPort); 
-		//Socket socket = new Socket("132.68.60.114", serverPort);
+		//Socket socket = new Socket("132.68.60.117", serverPort);
 		System.out.println("Just connected to " + socket.getRemoteSocketAddress()); 
 		PrintWriter toServer = 
 			new PrintWriter(socket.getOutputStream(),true);

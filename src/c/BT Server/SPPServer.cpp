@@ -70,7 +70,11 @@ int main()
 		service.lpszServiceInstanceName = ("Accelerometer Data...");
 		service.lpszComment = ("Pushing data to PC");
 
+<<<<<<< HEAD
 		GUID serviceID = SerialPortServiceClass_UUID;//OBEXFileTransferServiceClass_UUID;
+=======
+		GUID serviceID = SerialPortServiceClass_UUID; //OBEXFileTransferServiceClass_UUID;
+>>>>>>> d962926248c54cd0ae0277a6c9ecfcd8acc87c92
 
 		service.lpServiceClassId = &serviceID;
 		service.dwNumberOfCsAddrs = 1;
