@@ -22,10 +22,10 @@ int main(int argc, char *argv[])
 	si.wShowWindow = SW_SHOW;
 
 	if (!DetourCreateProcessWithDllEx(NULL,
-		convertCharArrayToLPCWSTR("C:\\Users\\Itay\\Documents\\Visual Studio 2013\\Projects\\19.5 try\\DummyApp\\Debug\\DummyApp.exe"), NULL, NULL, TRUE,
+		convertCharArrayToLPCWSTR("C:\\Users\\Itay\\Documents\\GitHub\\BTProxy\\src\\c\\BT Client\\BTClient.exe"), NULL, NULL, TRUE,
 		CREATE_DEFAULT_ERROR_MODE | CREATE_SUSPENDED,
 		NULL, NULL, &si, &pi,
-		"C:\\Users\\Itay\\Documents\\Visual Studio 2013\\Projects\\19.5 try\\HookDll\\Debug\\HookDll.dll", NULL))
+		"C:\\Users\\Itay\\Documents\\GitHub\\BTProxy\\src\\c\\Hook\\HookDll\\Debug\\HookDll.dll", NULL))
 		MessageBox(0, convertCharArrayToLPCWSTR("failed"), 0, 0);
 	else
 		MessageBox(0, convertCharArrayToLPCWSTR("success"), 0, 0);

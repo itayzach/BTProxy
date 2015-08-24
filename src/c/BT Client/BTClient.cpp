@@ -19,7 +19,7 @@ int __cdecl main(int argc, char **argv)
     WSADATA 		wsaData;
     SOCKET 			LocalSocket 			= INVALID_SOCKET;
 	SOCKADDR_BTH    SockAddrBthServer;
-	char 			*sendbuf 				= "this is a test";
+	char 			*sendbuf 				= "Message from BT Client";
 	int 			iResult;
  
     // Initialize Winsock
@@ -30,7 +30,9 @@ int __cdecl main(int argc, char **argv)
     }
 	printf("Initialized Winsock\n");
 	
+	// =========================================
 	// Create a SOCKET for connecting to server
+	// =========================================
 	LocalSocket = socket(	AF_BTH,				//ai_family 
 							SOCK_STREAM, 		//ai_socktype
 							BTHPROTO_RFCOMM);	//ai_protocol
@@ -41,15 +43,19 @@ int __cdecl main(int argc, char **argv)
 	}
 	printf("Created local socket\n");
 
-	
+	// =========================================
 	// Define the server address
+	// =========================================
 	SockAddrBthServer.addressFamily = AF_BTH;
 	SockAddrBthServer.btAddr = 0xD0C1B14BEB23; 
 	SockAddrBthServer.serviceClassId = SerialPortServiceClass_UUID;
 	SockAddrBthServer.port = BT_PORT_ANY;	
 	
 	printf("Attemping to connect\n");
+	
+	// =========================================
 	// Connect to server
+	// =========================================
 	iResult = connect( LocalSocket,  (struct sockaddr *) &SockAddrBthServer, sizeof(SOCKADDR_BTH));
 	if (iResult == SOCKET_ERROR) {
 		printf("Connect failed with error: %d\n", WSAGetLastError());
@@ -58,7 +64,9 @@ int __cdecl main(int argc, char **argv)
 	}
 	printf("Connected to server. Sending message to server\n");
 	
+	// =========================================
 	// Send an initial buffer
+	// =========================================
     iResult = send( LocalSocket, sendbuf, (int)strlen(sendbuf), 0 );
     if (iResult == SOCKET_ERROR) {
         printf("send failed with error: %d\n", WSAGetLastError());
