@@ -26,12 +26,15 @@ public class MainActivity extends Activity {
 	   
 	// Well known SPP UUID
 	private static final UUID MY_UUID =
-	UUID.fromString("00001106-0000-1000-8000-00805F9B34FB");
-	 
-	// Insert your server's MAC address
-	//private static String address = "00:11:67:8A:6D:49"; // BTProxy MAC
-	private static String address = "C0:F8:DA:C6:41:AB";  // itay's laptop MAC
+	UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+	//UUID.fromString("00000000-0000-0000-0000-000000000000");
 	
+	// Insert your server's MAC address
+	// private static String address = "00:11:67:8A:6D:49"; // Lab computer
+	// private static String address = "C0:F8:DA:C6:41:AB"; // Itay's personal laptop
+	//private static String address = "80:86:F2:25:22:80"; // Itay's work laptop
+	//private static String address = "E4:D5:3D:CA:0B:11"; // Avishay's work laptop
+	private static String address = "00:11:67:55:90:57"; // CSR Dongle
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -66,13 +69,13 @@ public class MainActivity extends Activity {
 	    try {
 	      btSocket = device.createRfcommSocketToServiceRecord(MY_UUID);
 	    } catch (IOException e) {
-	      AlertBox("Fatal Error", "In onResume() and socket create failed: " + e.getMessage() + ".");
+	      AlertBox("Fatal error", "In onResume() and socket create failed: " + e.getMessage() + ".");
 	    }
-	    
-	 // Discovery is resource intensive.  Make sure it isn't going on
+	    out.append("\n...Created socket...");
+	    // Discovery is resource intensive.  Make sure it isn't going on
 	    // when you attempt to connect and pass your message.
 	    btAdapter.cancelDiscovery();
-	 
+	    out.append("\n...Canceled discovery...");
 	    // Establish the connection.  This will block until it connects.
 	    try {
 	      btSocket.connect();
@@ -81,30 +84,29 @@ public class MainActivity extends Activity {
 	      try {
 	        btSocket.close();
 	      } catch (IOException e2) {
-	        AlertBox("Fatal Error", "In onResume() and unable to close socket during connection failure" + e2.getMessage() + ".");
+	        AlertBox("Fatal error", "In onResume() and unable to close socket during connection failure" + e2.getMessage() + ".");
 	      }
 	    }
-	 
+	    
 	    // Create a data stream so we can talk to server.
 	    out.append("\n...Sending message to server...");
 	 
 	    try {
 	      outStream = btSocket.getOutputStream();
 	    } catch (IOException e) {
-	      AlertBox("Fatal Error", "In onResume() and output stream creation failed:" + e.getMessage() + ".");
+	      AlertBox("Fatal error", "In onResume() and output stream creation failed:" + e.getMessage() + ".");
 	    }
 	 
 	    String message = "Hello from Android.\n";
 	    byte[] msgBuffer = message.getBytes();
+	    
 	    try {
-	      outStream.write(msgBuffer);
+	    	out.append("\n...Trying write...");
+	    	outStream.write(msgBuffer);
 	    } catch (IOException e) {
-	      String msg = "In onResume() and an exception occurred during write: " + e.getMessage();
-	      if (address.equals("00:00:00:00:00:00")) 
-	        msg = msg + ".\n\nUpdate your server address from 00:00:00:00:00:00 to the correct address on line 37 in the java code";
-	      msg = msg +  ".\n\nCheck that the SPP UUID: " + MY_UUID.toString() + " exists on server.\n\n";
-	       
-	      AlertBox("Fatal Error", msg);       
+	    	String msg = "In onResume() and an exception occurred during write: " + e.getMessage();
+	    	msg = msg +  ".\n\nCheck that the SPP UUID: " + MY_UUID.toString() + " exists on server.\n\n";
+    		AlertBox("Fatal Error", "write failed - " + msg);       
 	    }	    
 	}
 	
@@ -117,14 +119,14 @@ public class MainActivity extends Activity {
 	      try {
 	        outStream.flush();
 	      } catch (IOException e) {
-	        AlertBox("Fatal Error", "In onPause() and failed to flush output stream: " + e.getMessage() + ".");
+	        AlertBox("Fatal error", "In onPause() and failed to flush output stream: " + e.getMessage() + ".");
 	      }
 	    }
 	 
 	    try     {
 	      btSocket.close();
 	    } catch (IOException e2) {
-	      AlertBox("Fatal Error", "In onPause() and failed to close socket." + e2.getMessage() + ".");
+	      AlertBox("Fatal error", "In onPause() and failed to close socket." + e2.getMessage() + ".");
 	    }
 	}
 	
@@ -165,7 +167,7 @@ public class MainActivity extends Activity {
 	 
 	    // Emulator doesn't support Bluetooth and will return null
 	    if(btAdapter==null) { 
-	      AlertBox("Fatal Error", "Bluetooth Not supported. Aborting.");
+	      AlertBox("Fatal error", "Bluetooth Not supported. Aborting.");
 	    } else {
 	      if (btAdapter.isEnabled()) {
 	        out.append("\n...Bluetooth is enabled...");

@@ -30,20 +30,20 @@ int main(int argc, char **argv)
 
 	if (WSAStartup(MAKEWORD(2, 2), &wsd) != 0)
 	{
-				printf("Unable to load Winsock! Error code is %d\n", WSAGetLastError());
-				return 1;
+		printf("Unable to load Winsock! Error code is %d\n", WSAGetLastError());
+		return 1;
 	}
 	else
-				printf("WSAStartup() is OK, Winsock lib loaded!\n");
+		printf("WSAStartup() is OK, Winsock lib loaded!\n");
 
 	s = socket (AF_BTH, SOCK_STREAM, BTHPROTO_RFCOMM);
 	if (s == INVALID_SOCKET)
 	{
-				printf ("Socket creation failed, error %d\n", WSAGetLastError());
-				return 1;
+		printf ("Socket creation failed, error %d\n", WSAGetLastError());
+		return 1;
 	}
 	else
-				printf ("socket() looks fine!\n");
+		printf ("socket() looks fine!\n");
 
 	memset (&sab, 0, sizeof(sab));
 	sab.addressFamily  = AF_BTH;
@@ -53,33 +53,33 @@ int main(int argc, char **argv)
 
 	if (0 != bind(s, (SOCKADDR *) &sab, sizeof(sab)))
 	{
-				printf ("bind() failed with error code %d\n", WSAGetLastError());
-				closesocket (s);
-				return 1;
+		printf ("bind() failed with error code %d\n", WSAGetLastError());
+		closesocket (s);
+		return 1;
 	}
 	else
-				printf ("bind() looks fine!\n");
+		printf ("bind() looks fine!\n");
 
 	if(listen (s, 5) == 0)
-				printf("listen() is OK! Listening for connection...\n");
+		printf("listen() is OK! Listening for connection...\n");
 	else
-				printf("listen() failed with error code %d\n", WSAGetLastError());
+		printf("listen() failed with error code %d\n", WSAGetLastError());
 
 	for ( ; ; )
 	{
-				// Get information on the port assigned
-				ilen = sizeof(sab2);
-				s2 = accept (s, (SOCKADDR *)&sab2, &ilen);
-				if (s2 == INVALID_SOCKET)
-				{
-							printf ("accept() failed with error code %d\n", WSAGetLastError ());
-							break;
-				}
-				else
-							printf ("accept(), is OK buddy!\n");
+		// Get information on the port assigned
+		ilen = sizeof(sab2);
+		s2 = accept (s, (SOCKADDR *)&sab2, &ilen);
+		if (s2 == INVALID_SOCKET)
+		{
+			printf ("accept() failed with error code %d\n", WSAGetLastError ());
+			break;
+		}
+		else
+			printf ("accept(), is OK buddy!\n");
 
-				// Print the info
-				printf ("Connection came from %04x%08x to channel %d\n", GET_NAP(sab2.btAddr), GET_SAP(sab2.btAddr), sab2.port);
+		// Print the info
+		printf ("Connection came from %04x%08x to channel %d\n", GET_NAP(sab2.btAddr), GET_SAP(sab2.btAddr), sab2.port);
 	}
  
     // Receive until the peer closes the connection
