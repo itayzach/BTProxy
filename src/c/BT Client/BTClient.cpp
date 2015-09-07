@@ -21,8 +21,10 @@ int __cdecl main(int argc, char **argv)
 	SOCKADDR_BTH    SockAddrBthServer;
 	char 			*sendbuf 				= "Message from BT Client";
 	int 			iResult;
- 
+	
+ 	// =========================================
     // Initialize Winsock
+	// =========================================
     iResult = WSAStartup(wVersionRequested, &wsaData);
     if (iResult != 0) {
         printf("WSAStartup failed with error: %d\n", iResult);
@@ -88,8 +90,10 @@ int __cdecl main(int argc, char **argv)
             // printf("recv failed with error: %d\n", WSAGetLastError());
 
     // } while( iResult > 0 );
-
+	
+	// =========================================
     // cleanup
+	// =========================================
 	printf("Cleaning up\n");
     closesocket(LocalSocket);
     WSACleanup();

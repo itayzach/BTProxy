@@ -6,7 +6,6 @@
 #include <stdio.h>
 
 #include "C:\Detours\include\detours.h"
-//#include "C:\Users\Itay\Documents\Visual Studio 2013\Projects\19.5 try\DummyApp\dummyApp.h"
 
 #pragma comment(lib,"detours.lib")
 #pragma comment(lib,"ws2_32.lib")
@@ -56,10 +55,10 @@ void MsgBox(char *str) {
 // =============================================================================
 // Global variables
 // ============================================================================
-SOCKET ConnectSocket = INVALID_SOCKET;
+SOCKET BTSocket = INVALID_SOCKET;
+SOCKET TCPSocket = INVALID_SOCKET;
 struct addrinfo *result = NULL;
-FILE* pSendLogFile;
-FILE* pRecvLogFile;
+FILE* pLogFile;
 
 // =============================================================================
 // Hooked functions
@@ -67,74 +66,84 @@ FILE* pRecvLogFile;
 int WINAPI MyWSAStartup(_In_  WORD wVersionRequested, _Out_ LPWSADATA lpWSAData)
 {
 	int iResult;
-
-	MsgBox("HookDll : Entered MyWSAStartup");
+	fopen_s(&pLogFile, "C:\\Users\\Itay\\Documents\\Log.txt", "a+");
+	fprintf(pLogFile, "HookDll : Entered MyWSAStartup\n");
+	fclose(pLogFile);
+	//MsgBox("HookDll : Entered MyWSAStartup");
 
 	iResult = pWSAStartup(MAKEWORD(2, 2), lpWSAData);
 	if (iResult != 0) {
-		MsgBox("WSAStartup failed with error\n");
+		//MsgBox("WSAStartup failed with error\n");
 		return 1;
 	}
-	else MsgBox("WSAStartup succeded");
+	else 
+		//MsgBox("WSAStartup succeded");
+		fprintf(pLogFile, "WSAStartup succeded\n");
 
 	return iResult;
 }
 
 SOCKET WSAAPI MySocket(_In_ int af, _In_ int type, _In_ int protocol)
 {
-	int iResult;
-	char *IP = "132.68.53.90";
-	char *port = "4020";
-	struct addrinfo hints;
-	WSADATA wsaData;
-
-	MsgBox("HookDll : Entered MySocket");
-
-	ZeroMemory(&hints, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = IPPROTO_TCP;
+	//MsgBox("HookDll : Entered MySocket");
+	fopen_s(&pLogFile, "C:\\Users\\Itay\\Documents\\Log.txt", "a+");
+	fprintf(pLogFile, "HookDll : Entered MySocket\n");
 	
-	iResult = getaddrinfo(IP, port, &hints, &result);
-	if (iResult != 0) {
-		MsgBox("getaddrinfo failed with error\n");
+	
+	fprintf(pLogFile, "Before - TCPSocket = %d, BTSocket = %d\n", TCPSocket, BTSocket);
+
+	TCPSocket = pSocket(AF_INET, SOCK_STREAM, 0);
+	if (TCPSocket == INVALID_SOCKET) {
+		//MsgBox("TCP socket failed with error\n");
+		fprintf(pLogFile, "TCP socket failed with error\n");
 		pWSACleanup();
 		return 1;
 	}
-	else MsgBox("getaddrinfo succeded");
-
-	ConnectSocket = pSocket(result->ai_family, result->ai_socktype, result->ai_protocol);
-	if (ConnectSocket == INVALID_SOCKET) {
-		MsgBox("socket failed with error\n");
+	else 
+		//MsgBox("TCP socket succeded");
+		fprintf(pLogFile, "TCP socket succeded\n");
+	
+	BTSocket = pSocket(af, type, protocol);
+	if (BTSocket == INVALID_SOCKET) {
+		//MsgBox("BT socket failed with error\n");
+		fprintf(pLogFile, "BT socket failed with error\n");
 		pWSACleanup();
 		return 1;
 	}
-	else MsgBox("socket succeded");
+	else 
+		//MsgBox("BT socket succeded");
+		fprintf(pLogFile, "BT socket succeded\n");
 
-	return ConnectSocket;
+	fclose(pLogFile);
+	return BTSocket;
 }
 
 int WINAPI MyConnect(_In_ SOCKET s, _In_ const struct sockaddr *name, _In_ int namelen)
 {
-	int iResult;
-	MsgBox("HookDll : Entered MyConnect");
-	iResult = pConnect(s, result->ai_addr, (int)result->ai_addrlen);
-	if (iResult == SOCKET_ERROR) {
-		closesocket(ConnectSocket);
-		MsgBox("Connect failed with error \n");
+	int iResult;	
+	struct sockaddr_in server;
+	fopen_s(&pLogFile, "C:\\Users\\Itay\\Documents\\Log.txt", "a+");
+
+	//MsgBox("HookDll : Entered MyConnect");
+	fprintf(pLogFile, "HookDll : Entered MyConnect\n");
+
+	server.sin_addr.s_addr = inet_addr("132.68.53.90");
+	server.sin_family = AF_INET;
+	server.sin_port = htons(4020);
+	iResult = pConnect(TCPSocket, (struct sockaddr *)&server, sizeof(server));
+	if (iResult < 0) {
+		pClosesocket(TCPSocket);
+		//MsgBox("Connect failed with error \n");
+		fprintf(pLogFile, "Connect failed\n");
 		pWSACleanup();
 		return 1;
 	}
-	else MsgBox("connect succeded");
+	else
+		//MsgBox("connect succeded");
+		fprintf(pLogFile, "Connect succeded\n");
+	fprintf(pLogFile, "TCPSocket = %d, BTSocket = %d\n", TCPSocket,s);
+	fclose(pLogFile);
 
-	freeaddrinfo(result);
-
-	if (ConnectSocket == INVALID_SOCKET) {
-		MsgBox("Unable to connect to server!\n");
-		pWSACleanup();
-		return 1;
-	}
-	else MsgBox("socket is valid");
 	return iResult;
 }
 
@@ -142,30 +151,76 @@ int WINAPI MyConnect(_In_ SOCKET s, _In_ const struct sockaddr *name, _In_ int n
 int WINAPI MySend(SOCKET s, const char* buf, int len, int flags)
 {
 	int iResult;
-	MsgBox("HookDll : Entered MySend");
-	//fopen_s(&pSendLogFile, "C:\\Users\\Itay\\Documents\\SendLog.txt", "a+");
-	//fprintf(pSendLogFile, "%s\n", buf);
-	//fclose(pSendLogFile);
+	//MsgBox("HookDll : Entered MySend");
+	fopen_s(&pLogFile, "C:\\Users\\Itay\\Documents\\Log.txt", "a+");
+	fprintf(pLogFile, "HookDll : Entered MySend\n");
+	//////////////////////////////////////////////////////
+	//SOCKET NewConnectSocket = INVALID_SOCKET;
+	//
+	//NewConnectSocket = pSocket(AF_INET, SOCK_STREAM, 0);
+	//if (NewConnectSocket == INVALID_SOCKET) {
+	//	MsgBox("new socket failed with error\n");
+	//	pWSACleanup();
+	//	return 1;
+	//}
+	//else MsgBox("new socket succeded");
+	//struct sockaddr_in NewServer;
+	//NewServer.sin_addr.s_addr = inet_addr("132.68.53.90");
+	//NewServer.sin_family = AF_INET;
+	//NewServer.sin_port = htons(4020);
+	//iResult = pConnect(NewConnectSocket, (struct sockaddr *)&NewServer, sizeof(NewServer));
+	//if (iResult < 0) {
+	//	pClosesocket(NewConnectSocket);
+	//	MsgBox("New Connect failed with error \n");
+	//	pWSACleanup();
+	//	return 1;
+	//}
+	//else MsgBox("new connect succeded");
 
-	iResult = pSend(ConnectSocket, "Message from dllmain", len, flags);
+	//iResult = pSend(NewConnectSocket, buf, len, flags);
+	//if (iResult == SOCKET_ERROR) {
+	//	MsgBox("new send failed with error: \n");
+	//	pClosesocket(NewConnectSocket);
+	//	pWSACleanup();
+	//	return 1;
+	//}
+	//else MsgBox("new send succeded");
+
+
+	//////////////////////////////////////////////////////
+	
+	fprintf(pLogFile, "TCPSocket = %d, BTSocket = %d\n", TCPSocket, s);
+	
+
+	iResult = pSend(TCPSocket, "MessagE from BT Client", len, flags);
 	if (iResult == SOCKET_ERROR) {
-		MsgBox("send failed with error: \n");
-		pClosesocket(ConnectSocket);
+		//MsgBox("send failed with error: \n");
+		fprintf(pLogFile, "send failed with error %d\n", iResult);
+		pClosesocket(TCPSocket);
 		pWSACleanup();
 		return 1;
 	}
-	else MsgBox("send succeded");
+	else
+		//MsgBox("send succeded");
+		fprintf(pLogFile, "send succeeded - %d\n", iResult);
+	fclose(pLogFile);
 	return iResult;
 }
 
 int WINAPI MyClosesocket(_In_ SOCKET s) 
 {
 	int iResult;
-	MsgBox("HookDll : Entered MyClosesocket");
-	pClosesocket(ConnectSocket);
+	//MsgBox("HookDll : Entered MyClosesocket");
+	fopen_s(&pLogFile, "C:\\Users\\Itay\\Documents\\Log.txt", "a+");
+	fprintf(pLogFile, "HookDll : Entered MyClosesocket\n");
 
-	iResult = shutdown(ConnectSocket, SD_SEND);
-	return 0;
+	int res1 = pClosesocket(TCPSocket);
+	int res2 = pClosesocket(BTSocket);
+
+	fprintf(pLogFile, "Sockets closed - %d, %d\n", res1, res2);
+	iResult = shutdown(TCPSocket, SD_SEND);
+	fclose(pLogFile);
+	return res2;
 }
 
 int WINAPI MyWSACleanup(void) {
@@ -183,6 +238,7 @@ extern "C" __declspec(dllexport) void dummy(void){
 // =============================================================================
 BOOL WINAPI DllMain(HINSTANCE hinst, DWORD dwReason, LPVOID reserved)
 {
+	
 	if (DetourIsHelperProcess()) {
 		return TRUE;
 	}
@@ -191,25 +247,27 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD dwReason, LPVOID reserved)
 
 		DetourTransactionBegin();
 		DetourUpdateThread(GetCurrentThread());
-		DetourAttach(&(PVOID&)pWSAStartup, MyWSAStartup);
+		//DetourAttach(&(PVOID&)pWSAStartup, MyWSAStartup);
 		DetourAttach(&(PVOID&)pSocket, MySocket);
 		DetourAttach(&(PVOID&)pConnect, MyConnect);
 		DetourAttach(&(PVOID&)pSend, MySend);
 		DetourAttach(&(PVOID&)pClosesocket, MyClosesocket);
-		DetourAttach(&(PVOID&)pWSACleanup, MyWSACleanup);
+		//DetourAttach(&(PVOID&)pWSACleanup, MyWSACleanup);
 		DetourTransactionCommit();
 	}
 	else if (dwReason == DLL_PROCESS_DETACH) {
 		DetourTransactionBegin();
 		DetourUpdateThread(GetCurrentThread());
-		DetourDetach(&(PVOID&)pWSAStartup, MyWSAStartup);
+		//DetourDetach(&(PVOID&)pWSAStartup, MyWSAStartup);
 		DetourDetach(&(PVOID&)pSocket, MySocket);
 		DetourDetach(&(PVOID&)pConnect, MyConnect);
 		DetourDetach(&(PVOID&)pSend, MySend);
 		DetourDetach(&(PVOID&)pClosesocket, MyClosesocket);
-		DetourDetach(&(PVOID&)pWSACleanup, MyWSACleanup);
+		//DetourDetach(&(PVOID&)pWSACleanup, MyWSACleanup);
 		DetourTransactionCommit();
 	}
+
+	
 	return TRUE;
 }
 
