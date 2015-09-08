@@ -1,7 +1,18 @@
-#include <windows.h>
+#include <winsock2.h>
+#include <ws2bth.h>
+#include <BluetoothAPIs.h>
+#include <stdlib.h>
+#include <stdio.h>
+//#include <windows.h>
+
 #include "C:\Detours\include\detours.h"
 #pragma comment(lib,"detours.lib")
 
+#pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "irprops.lib")
+// =============================================================================
+// Helper functions
+// =============================================================================
 // convert const char* to LPCWSTR
 wchar_t *convertCharArrayToLPCWSTR(const char* charArray)
 {
@@ -10,32 +21,47 @@ wchar_t *convertCharArrayToLPCWSTR(const char* charArray)
 	return wString;
 }
 
+void MsgBox(char *str) {
+	MessageBoxW(NULL, convertCharArrayToLPCWSTR(str), NULL, MB_OK);
+}
+
+// =============================================================================
+// Main
+// =============================================================================
 int main(int argc, char *argv[])
 {
 	STARTUPINFO si;
 	PROCESS_INFORMATION pi;
+	char* ExePath = "C:\\Users\\Itay\\Documents\\GitHub\\BTProxy\\src\\c\\BTClient\\BTClient.exe";
+	char* DllPath = "C:\\Users\\Itay\\Documents\\GitHub\\BTProxy\\src\\c\\Hook\\HookDll\\Debug\\HookDll.dll";
 
-	ZeroMemory(&si, sizeof(si));
-	ZeroMemory(&pi, sizeof(pi));
-	si.cb = sizeof(si);
-	si.dwFlags = STARTF_USESHOWWINDOW;
-	si.wShowWindow = SW_SHOW;
+	//if (!BTDeviceIsNear()) {
+		MsgBox("BT device wasn't found, detouring...");
+		ZeroMemory(&si, sizeof(si));
+		ZeroMemory(&pi, sizeof(pi));
+		si.cb = sizeof(si);
+		si.dwFlags = STARTF_USESHOWWINDOW;
+		si.wShowWindow = SW_SHOW;
 
-	if (!DetourCreateProcessWithDllEx(NULL,
-		convertCharArrayToLPCWSTR("C:\\Users\\Itay\\Documents\\GitHub\\BTProxy\\src\\c\\BT Client\\BTClient.exe"), NULL, NULL, TRUE,
-		CREATE_DEFAULT_ERROR_MODE | CREATE_SUSPENDED,
-		NULL, NULL, &si, &pi,
-		"C:\\Users\\Itay\\Documents\\GitHub\\BTProxy\\src\\c\\Hook\\HookDll\\Debug\\HookDll.dll", NULL))
-		MessageBox(0, convertCharArrayToLPCWSTR("failed"), 0, 0);
-	else
-		MessageBox(0, convertCharArrayToLPCWSTR("success"), 0, 0);
+		if (!DetourCreateProcessWithDllEx(NULL,
+			convertCharArrayToLPCWSTR(ExePath), NULL, NULL, TRUE,
+			CREATE_DEFAULT_ERROR_MODE | CREATE_SUSPENDED,
+			NULL, NULL, &si, &pi,
+			DllPath, NULL))
+			MsgBox("Detour failed");
+		else
+			MsgBox("Detour succeeded");
 
-	ResumeThread(pi.hThread);
+		ResumeThread(pi.hThread);
 
-	WaitForSingleObject(pi.hProcess, INFINITE);
+		WaitForSingleObject(pi.hProcess, INFINITE);
 
-	CloseHandle(&si);
-	CloseHandle(&pi);
+		CloseHandle(&si);
+		CloseHandle(&pi);
+	//} else {
+	//	MsgBox("BT device was found. skipping detour and executing program as is");
+	//	system(ExePath);
 
+	//}
 	return EXIT_SUCCESS;
 }
