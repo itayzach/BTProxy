@@ -19,7 +19,8 @@ int __cdecl main(int argc, char **argv)
     WSADATA 		wsaData;
     SOCKET 			LocalSocket 			= INVALID_SOCKET;
 	SOCKADDR_BTH    SockAddrBthServer;
-	char 			*sendbuf 				= "Message from BT Client";
+	char 			*sendbuf 				= "Message from BT Client\n";
+	//char            sendbuf[24];
 	int 			iResult;
 	
  	// =========================================
@@ -69,15 +70,19 @@ int __cdecl main(int argc, char **argv)
 	// =========================================
 	// Send an initial buffer
 	// =========================================
-    iResult = send( LocalSocket, sendbuf, (int)strlen(sendbuf), 0 );
-    if (iResult == SOCKET_ERROR) {
-        printf("[BTClient] send failed with error: %d\n", WSAGetLastError());
-        closesocket(LocalSocket);
-        WSACleanup();
-        return 1;
-    }
-	printf("[BTClient] Message to server was sent\n");
- 
+	//strcpy(sendbuf,msg);
+	for (int i = 0; i < 1; i++) {
+		//sendbuf[8] = i + '0';
+		iResult = send( LocalSocket, sendbuf, (int)strlen(sendbuf), 0 );
+		if (iResult == SOCKET_ERROR) {
+			printf("[BTClient] send failed with error: %d\n", WSAGetLastError());
+			closesocket(LocalSocket);
+			WSACleanup();
+			return 1;
+		}
+		printf("[BTClient] Message %d to server was sent\n", i);
+		Sleep(2000);
+	}
     // // Receive until the peer closes the connection
     // do {
 

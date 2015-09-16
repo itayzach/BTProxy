@@ -53,7 +53,9 @@ SOCKET BTSocket = INVALID_SOCKET;
 SOCKET TCPSocket = INVALID_SOCKET;
 struct addrinfo *result = NULL;
 FILE*  pLogFile;
-bool   BTConnect = true; // if false, using TCP connection
+
+// DEBUG - change to true for functional run
+bool   BTConnect = false; // if false, using TCP connection
 
 // =============================================================================
 // Hooked functions
@@ -62,32 +64,28 @@ SOCKET WSAAPI MySocket(_In_ int af, _In_ int type, _In_ int protocol)
 {
 	//MsgBox("HookDll : Entered MySocket");
 	fopen_s(&pLogFile, "C:\\Users\\Itay\\Documents\\Log.txt", "a+");
-	fprintf(pLogFile, "HookDll : Entered MySocket\n");
-	
-	
-	fprintf(pLogFile, "Before - TCPSocket = %d, BTSocket = %d\n", TCPSocket, BTSocket);
 
 	TCPSocket = pSocket(AF_INET, SOCK_STREAM, 0);
 	if (TCPSocket == INVALID_SOCKET) {
 		//MsgBox("TCP socket failed with error\n");
-		fprintf(pLogFile, "TCP socket failed with error\n");
+		fprintf(pLogFile, "[MySocket]\t TCP socket failed with error\n");
 		WSACleanup();
 		return 1;
 	}
 	else 
 		//MsgBox("TCP socket succeded");
-		fprintf(pLogFile, "TCP socket succeded\n");
+		fprintf(pLogFile, "[MySocket]\t opened TCP socket number %d\n", TCPSocket);
 	
 	BTSocket = pSocket(af, type, protocol);
 	if (BTSocket == INVALID_SOCKET) {
 		//MsgBox("BT socket failed with error\n");
-		fprintf(pLogFile, "BT socket failed with error\n");
+		fprintf(pLogFile, "[MySocket]\t BT socket failed with error\n");
 		WSACleanup();
 		return 1;
 	}
 	else 
 		//MsgBox("BT socket succeded");
-		fprintf(pLogFile, "BT socket succeded\n");
+		fprintf(pLogFile, "[MySocket]\t opened BT socket number %d\n", BTSocket);
 
 	fclose(pLogFile);
 	return BTSocket;
@@ -100,35 +98,37 @@ int WINAPI MyConnect(_In_ SOCKET s, _In_ const struct sockaddr *name, _In_ int n
 	fopen_s(&pLogFile, "C:\\Users\\Itay\\Documents\\Log.txt", "a+");
 
 	//MsgBox("HookDll : Entered MyConnect");
-	fprintf(pLogFile, "HookDll : Entered MyConnect\n");
 
-	server.sin_addr.s_addr = inet_addr("132.68.53.230");
+	server.sin_addr.s_addr = inet_addr("132.68.50.184");
 	server.sin_family = AF_INET;
 	server.sin_port = htons(4020);
 
 	// Try to connect to BTSocket
 	iResult = pConnect(BTSocket, name, namelen);
+	
+	// DEBUG begin
+	iResult = -1;
+	// DEBUG end
 	if (iResult < 0) {
-		fprintf(pLogFile, "BT connect failed, trying to connect with TCP\n");
+		fprintf(pLogFile, "[MyConnect]\t BT connect failed, trying to connect with TCP\n");
 		BTConnect = false;
 		iResult = pConnect(TCPSocket, (struct sockaddr *)&server, sizeof(server));
 		if (iResult < 0) {
 			pClosesocket(TCPSocket);
 			//MsgBox("Connect failed with error \n");
-			fprintf(pLogFile, "Connect failed\n");
+			fprintf(pLogFile, "[MyConnect]\t TCP Connect failed\n");
 			WSACleanup();
 			return 1;
 		}
 		else {
-			fprintf(pLogFile, "BT Connect succeded\n");
+			fprintf(pLogFile, "[MyConnect]\t BT Connect succeded\n");
 		}
 			
 	}
 	else {
 		//MsgBox("connect succeded");
-		fprintf(pLogFile, "Connect succeded\n");
+		fprintf(pLogFile, "[MyConnect]\t BT Connect succeded\n");
 	}
-	fprintf(pLogFile, "TCPSocket = %d, BTSocket = %d\n", TCPSocket,s);
 	fclose(pLogFile);
 
 	return iResult;
@@ -139,36 +139,35 @@ int WINAPI MySend(SOCKET s, const char* buf, int len, int flags)
 {
 	int iResult;
 	//MsgBox("HookDll : Entered MySend");
-	char* msg = "Message from HookDLL  ";
+	//char* msg = "Message from HookDLL  ";
 	fopen_s(&pLogFile, "C:\\Users\\Itay\\Documents\\Log.txt", "a+");
-	fprintf(pLogFile, "HookDll : Entered MySend\n");
-	fprintf(pLogFile, "TCPSocket = %d, BTSocket = %d\n", TCPSocket, s);
 	
 	if (!BTConnect) {
-		iResult = pSend(TCPSocket, msg, strlen(msg), flags);
+		iResult = pSend(TCPSocket, buf, strlen(buf), flags);
+		// DEBUG - iResult = pSend(TCPSocket, msg, strlen(msg), flags);
 		if (iResult == SOCKET_ERROR) {
 			//MsgBox("send failed with error: \n");
-			fprintf(pLogFile, "TCP send failed with error %d\n", iResult);
+			fprintf(pLogFile, "[MySend]\t TCP send failed with error %d\n", iResult);
 			pClosesocket(TCPSocket);
 			WSACleanup();
 			return 1;
 		}
 		else
 			//MsgBox("send succeded");
-			fprintf(pLogFile, "TCP send succeeded - %d\n", iResult);
+			fprintf(pLogFile, "[MySend]\t TCP send succeeded. Message = %s, iResult =  %d\n", buf, iResult);
 	}
 	else {
 		iResult = pSend(BTSocket, buf, len, flags);
 		if (iResult == SOCKET_ERROR) {
 			//MsgBox("send failed with error: \n");
-			fprintf(pLogFile, "BT send failed with error %d\n", iResult);
+			fprintf(pLogFile, "[MySend]\t BT send failed with error %d\n", iResult);
 			pClosesocket(TCPSocket);
 			WSACleanup();
 			return 1;
 		}
 		else
 			//MsgBox("send succeded");
-			fprintf(pLogFile, "BT send succeeded - %d\n", iResult);
+			fprintf(pLogFile, "[MySend]\t BT send succeeded - %d\n", iResult);
 	}
 	fclose(pLogFile);
 	return iResult;
@@ -179,12 +178,11 @@ int WINAPI MyClosesocket(_In_ SOCKET s)
 	int iResult;
 	//MsgBox("HookDll : Entered MyClosesocket");
 	fopen_s(&pLogFile, "C:\\Users\\Itay\\Documents\\Log.txt", "a+");
-	fprintf(pLogFile, "HookDll : Entered MyClosesocket\n");
 
 	int res1 = pClosesocket(TCPSocket);
 	int res2 = pClosesocket(BTSocket);
 
-	fprintf(pLogFile, "Sockets closed - %d, %d\n", res1, res2);
+	fprintf(pLogFile, "[MyClosesocket]\t Sockets closed - %d, %d (zeros are successes)\n", res1, res2);
 	iResult = shutdown(TCPSocket, SD_SEND);
 	fclose(pLogFile);
 	return res2;

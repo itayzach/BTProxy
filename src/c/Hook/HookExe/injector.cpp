@@ -3,6 +3,7 @@
 #include <BluetoothAPIs.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 //#include <windows.h>
 
 #include "C:\Detours\include\detours.h"
@@ -34,34 +35,39 @@ int main(int argc, char *argv[])
 	PROCESS_INFORMATION pi;
 	char* ExePath = "C:\\Users\\Itay\\Documents\\GitHub\\BTProxy\\src\\c\\BTClient\\BTClient.exe";
 	char* DllPath = "C:\\Users\\Itay\\Documents\\GitHub\\BTProxy\\src\\c\\Hook\\HookDll\\Debug\\HookDll.dll";
+	
+	FILE*  pLogFile;
+	time_t rawtime;
+	struct tm* timeinfo;
+	time(&rawtime);
+	timeinfo = localtime(&rawtime);
 
-	//if (!BTDeviceIsNear()) {
-		MsgBox("BT device wasn't found, detouring...");
-		ZeroMemory(&si, sizeof(si));
-		ZeroMemory(&pi, sizeof(pi));
-		si.cb = sizeof(si);
-		si.dwFlags = STARTF_USESHOWWINDOW;
-		si.wShowWindow = SW_SHOW;
+	fopen_s(&pLogFile, "C:\\Users\\Itay\\Documents\\Log.txt", "w+");
+	fprintf(pLogFile, "*******************************************\n");
+	fprintf(pLogFile, "Ran at: %s", asctime(timeinfo));
+	fprintf(pLogFile, "*******************************************\n");	
+	fclose(pLogFile);
 
-		if (!DetourCreateProcessWithDllEx(NULL,
-			convertCharArrayToLPCWSTR(ExePath), NULL, NULL, TRUE,
-			CREATE_DEFAULT_ERROR_MODE | CREATE_SUSPENDED,
-			NULL, NULL, &si, &pi,
-			DllPath, NULL))
-			MsgBox("Detour failed");
-		else
-			MsgBox("Detour succeeded");
+	ZeroMemory(&si, sizeof(si));
+	ZeroMemory(&pi, sizeof(pi));
+	si.cb = sizeof(si);
+	si.dwFlags = STARTF_USESHOWWINDOW;
+	si.wShowWindow = SW_SHOW;
 
-		ResumeThread(pi.hThread);
+	if (!DetourCreateProcessWithDllEx(NULL,
+		convertCharArrayToLPCWSTR(ExePath), NULL, NULL, TRUE,
+		CREATE_DEFAULT_ERROR_MODE | CREATE_SUSPENDED,
+		NULL, NULL, &si, &pi,
+		DllPath, NULL))
+		MsgBox("Detour failed");
+	else
+		MsgBox("Detour succeeded");
 
-		WaitForSingleObject(pi.hProcess, INFINITE);
+	ResumeThread(pi.hThread);
 
-		CloseHandle(&si);
-		CloseHandle(&pi);
-	//} else {
-	//	MsgBox("BT device was found. skipping detour and executing program as is");
-	//	system(ExePath);
+	WaitForSingleObject(pi.hProcess, INFINITE);
 
-	//}
+	CloseHandle(&si);
+	CloseHandle(&pi);
 	return EXIT_SUCCESS;
 }
