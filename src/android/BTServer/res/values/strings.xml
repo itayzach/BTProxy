@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">BTServer</string>
+    <string name="action_settings">Settings</string>
+    <string name="msgs_from_client"> Message from client: </string>
+    <string name="restartServer"> Restart Server </string>
+    
+</resources>
