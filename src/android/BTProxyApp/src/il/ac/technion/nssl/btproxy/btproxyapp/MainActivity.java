@@ -1,220 +1,304 @@
-package il.ac.technion.nssl.btproxy.dummyapp;
+package il.ac.technion.nssl.btproxy.btproxyapp;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.SocketException;
+import java.util.Enumeration;
 import java.util.UUID;
 
 import android.app.Activity;
-import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
 
+
+
+// =============================================================================
+// MainActivity class
+// =============================================================================
 public class MainActivity extends Activity {
+	private Button btnRestart;
+	// -------------------------------------------------------------------------
+	// TCP variables
+	// -------------------------------------------------------------------------
+	private TextView tvClientMsg,tvServerIP,tvServerPort;
+	private final int SERVER_PORT = 4020; //Define the server port
+	private boolean receivedTCPmsg = false;
+	private String  TCPmessage = null;
 	
-	// ======================================================
-	// Private variables
-	// ======================================================
-	TextView out;
-	private static final int REQUEST_ENABLE_BT = 1;
-	private BluetoothAdapter btAdapter = null;
-	private BluetoothSocket btSocket = null;
-	private OutputStream outStream = null;
-	private InputStream inStream = null;
-	 
-	// ------------------------------------------------------
-	// Well known SPP UUID
-	// ------------------------------------------------------
-	private static final UUID MY_UUID =
-			UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-	// ------------------------------------------------------
-	// BT Server MAC address
-	// ------------------------------------------------------
-	// private static String address = "00:11:67:8A:6D:49"; // BTProxy MAC
-	// private static String address = "C0:F8:DA:C6:41:AB";  // itay's laptop MAC
-	private static String address = "00:11:67:55:90:57";  // CSR bluetooth MAC
-	
+	// -------------------------------------------------------------------------
+	// BT variables
+	// -------------------------------------------------------------------------
+	BluetoothAdapter adapter = null;
+	private static String address = "D0:C1:B1:4B:EB:23";
+	private boolean CONTINUE_READ_WRITE = true;
+	private BluetoothSocket BTSocket;
+	private OutputStreamWriter os;
+	private BluetoothDevice remoteDevice;
+	private BroadcastReceiver discoveryResult = new BroadcastReceiver() {
+		
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			android.util.Log.e("TrackingFlow", "Entered onReceive");
+			unregisterReceiver(this);
+			//remoteDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+			remoteDevice = adapter.getRemoteDevice(address);
+			new Thread(BTinitiator).start();
+			android.util.Log.e("TrackingFlow", "Started initiator");
+		}
+	};
+	// -------------------------------------------------------------------------
+	// initiator
+	// -------------------------------------------------------------------------	
+	private Runnable BTinitiator = new Runnable() {
 
-	// ======================================================
-	// Methods
-	// ======================================================
+		@Override
+		public void run() {
+			try {
+				
+				android.util.Log.e("TrackingFlow", "Found: " + remoteDevice.getName());
+				UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+				BTSocket = remoteDevice.createRfcommSocketToServiceRecord(uuid);
+				BTSocket.connect();
+				android.util.Log.e("TrackingFlow", "Connected...");
+				os = new OutputStreamWriter(BTSocket.getOutputStream());
+				new Thread(writter).start();
+				android.util.Log.e("TrackingFlow", "Started new writter thread");
+				
+			}
+			catch (IOException e) {e.printStackTrace();}
+		}
+	};
+	
+	// -------------------------------------------------------------------------
+	// writter
+	// -------------------------------------------------------------------------
+	private Runnable writter = new Runnable() {
+
+		@Override
+		public void run() {
+			// wait for TCP message
+			android.util.Log.e("TrackingFlow", "waiting for message");
+			while (!receivedTCPmsg);
+			android.util.Log.e("TrackingFlow", "got message");
+			while (CONTINUE_READ_WRITE) {
+				try {
+					os.write(TCPmessage);
+					os.flush();
+					Thread.sleep(2000);
+					//CONTINUE_READ_WRITE = false;
+					
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			try {
+				BTSocket.close();
+				android.util.Log.e("TrackingFlow", "Closed BT socket");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	};
+
+	private Runnable initiator = new Runnable() {
+		@Override
+		public void run() {
+			try {
+				//Create a server socket object and bind it to a port
+				ServerSocket socServer = new ServerSocket(SERVER_PORT);
+				//Create server side client socket reference
+				Socket socClient = null;
+				//Infinite loop will listen for client requests to connect
+				while (true) {
+					//Accept the client connection and hand over communication to server side client socket
+					socClient = socServer.accept();
+					//For each client new instance of AsyncTask will be created
+					ServerAsyncTask serverAsyncTask = new ServerAsyncTask();
+					//Start the AsyncTask execution 
+					//Accepted client socket object will pass as the parameter
+					serverAsyncTask.execute(new Socket[] {socClient});
+					
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	};
+	// -------------------------------------------------------------------------
+	// ServerAsyncTask class
+	// handles the TCP communication with clients
+	// -------------------------------------------------------------------------
+	class ServerAsyncTask extends AsyncTask<Socket, Void, String> {
+		//Background task which serve for the client
+		@Override
+		protected String doInBackground(Socket... params) {
+			android.util.Log.e("TrackingFlow", "entered doInBackground");
+			String result = null;
+			//Get the accepted socket object 
+			Socket TCPSocket = params[0];
+			try {
+				//Get the data input stream coming from the client 
+				InputStream is = TCPSocket.getInputStream();
+				//Buffer the data input stream
+				BufferedReader br = new BufferedReader(
+						new InputStreamReader(is));
+				//Read the contents of the data buffer
+				android.util.Log.e("TrackingFlow", "before read");
+				result = br.readLine();
+				TCPmessage = result;
+				receivedTCPmsg = true;
+				android.util.Log.e("TrackingFlow", "after read");
+				
+				//Close the client connection
+				TCPSocket.close();
+				CONTINUE_READ_WRITE = false;
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			return result;
+		}
+
+		@Override
+		protected void onPostExecute(String s) {
+			//After finishing the execution of background task data will be write the text view
+			tvClientMsg.append(s);
+			
+		}
+	}
+	
+	// -------------------------------------------------------------------------
+	// OnCreate
+	// -------------------------------------------------------------------------
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		
-		out = (TextView) findViewById(R.id.out);
-		out.append("\nIn onCreate()...");
+		tvClientMsg = (TextView) findViewById(R.id.textViewClientMessage);
+		tvServerIP = (TextView) findViewById(R.id.textViewServerIP);
+		tvServerPort = (TextView) findViewById(R.id.textViewServerPort);
+		tvServerPort.append(Integer.toString(SERVER_PORT));
+		btnRestart = (Button) findViewById(R.id.btnRestart);
 		
-		btAdapter = BluetoothAdapter.getDefaultAdapter();
-		CheckBTState();
-	}
+		btnRestart.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				android.util.Log.e("TrackingFlow", "Restarting TCP server...");
+				if(BTSocket != null){
+					try{
+						os.close();
+						BTSocket.close();
+						CONTINUE_READ_WRITE = false;
+					}catch(Exception e){}
+				}
+				finish();
+				Intent intent = new Intent(MainActivity.this, MainActivity.class);
+				startActivity(intent);
+				
+			}
+		});
 
-	
-	@Override
-	protected void onStart() {
-		super.onStart();
-		out.append("\nIn onStart()...");
-	}
-	
-	@Override
-	protected void onResume() {
-		super.onResume();
-		out.append("\nIn onResume...\n...Attempting client connect...");
 		
-		// Set up a pointer to the remote node using it's address.
-	    BluetoothDevice device = btAdapter.getRemoteDevice(address);
-	    
-	    // Using SDP, find the service according to MY_UUID, and create a socket to server
-	    // (Service should be SPP)
-	    try {
-	      btSocket = device.createRfcommSocketToServiceRecord(MY_UUID);
-	    } catch (IOException e) {
-	      AlertBox("Fatal Error", "In onResume() and socket create failed: " + e.getMessage() + ".");
-	    }
-	    
-	    // Discovery is resource intensive.  Make sure it isn't going on
-	    // when you attempt to connect and pass your message.
-	    btAdapter.cancelDiscovery();
-	 
-	    // Establish the connection.  This will block until it connects.
-	    try {
-	      btSocket.connect();
-	      out.append("\nConnection established and data link opened...");
-	    } catch (IOException e) {
-	      try {
-	        btSocket.close();
-	      } catch (IOException e2) {
-	        AlertBox("Fatal Error", "In onResume() and unable to close socket during connection failure" + e2.getMessage() + ".");
-	      }
-	    }
-	 
-	    // Create a data stream so we can talk to server.
-	    out.append("\nSending message to server...");
-	 
-	    // Send string to server
-	    try {
-	      outStream = btSocket.getOutputStream();
-	    } catch (IOException e) {
-	      AlertBox("Fatal Error", "In onResume() and output stream creation failed:" + e.getMessage() + ".");
-	    }
-	 
-	    String message = "Hello from Android.\n";
-	    byte[] msgBuffer = message.getBytes();
-	    try {
-	      outStream.write(msgBuffer);
-	    } catch (IOException e) {
-	      String msg = "In onResume() and an exception occurred during write: " + e.getMessage();
-	      // msg = msg +  ".\n\nCheck that the SPP UUID: " + MY_UUID.toString() + " exists on server.\n\n";
-	       
-	      AlertBox("Fatal Error", msg);       
-	    }
-	    out.append("\nMessage sent");
-//	    // Receive data from server
-//	    try {
-//	    	inStream = btSocket.getInputStream();
-//	    } catch (IOException e) {
-//	    	AlertBox("Fatal Error", "In OnResume() and input stream creation failed:" + e.getMessage() + ".");
-//	    }
-//	    byte[] readBuffer = null;
-//	    try {
-//	    	int charsRead = 0;
-//	    	String readMsg = "";
-//	    	while ((charsRead = inStream.read(readBuffer)) != -1) {
-//	    		readMsg += new String(readBuffer).substring(0, charsRead);
-//	    	}
-//		    out.append("Got message from server : " + readMsg);
-//		} catch (IOException e) {
-//			AlertBox("Fatal Error", "Couldn't read data. got error : " + e.getMessage());       
-//		}
+		//Find IP
+		getDeviceIpAddress();
+		//New thread to listen to incoming connections
+		new Thread(initiator).start();
+		
+		
+		// BT discovery
+		registerReceiver(discoveryResult, new IntentFilter(BluetoothDevice.ACTION_FOUND));
+		
+		adapter = BluetoothAdapter.getDefaultAdapter();
+		if(adapter != null && adapter.isDiscovering()){
+			adapter.cancelDiscovery();
+		}
+		adapter.startDiscovery();
+		
 	}
-	
-	@Override
-	protected void onPause() {
-		super.onPause();
-		out.append("\nIn onPause()...");
-		 
-	    if (outStream != null) {
-	      try {
-	        outStream.flush();
-	      } catch (IOException e) {
-	        AlertBox("Fatal Error", "In onPause() and failed to flush output stream: " + e.getMessage() + ".");
-	      }
-	    }
-	 
-	    try     {
-	      btSocket.close();
-	    } catch (IOException e2) {
-	      AlertBox("Fatal Error", "In onPause() and failed to close socket." + e2.getMessage() + ".");
-	    }
-	}
-	
-	
-	@Override
-	protected void onStop() {
-		super.onStop();
-		out.append("\n...In onStop()...");
-	}
-	
+	// -------------------------------------------------------------------------
+	// OnDestory
+	// -------------------------------------------------------------------------
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		out.append("\n...In onDestroy()...");
+		try{unregisterReceiver(discoveryResult);}catch(Exception e){e.printStackTrace();}
+		if(BTSocket != null){
+			try{
+				os.close();
+				BTSocket.close();
+				CONTINUE_READ_WRITE = false;
+			}catch(Exception e){}
+		}
 	}
-	
+
+	// -------------------------------------------------------------------------
+	// getDeviceIpAddress
+	// -------------------------------------------------------------------------
+	public void getDeviceIpAddress() {
+		try {
+			//Loop through all the network interface devices
+			for (Enumeration<NetworkInterface> enumeration = NetworkInterface
+					.getNetworkInterfaces(); enumeration.hasMoreElements();) {
+				NetworkInterface networkInterface = enumeration.nextElement();
+				//Loop through all the ip addresses of the network interface devices
+				for (Enumeration<InetAddress> enumerationIpAddr = networkInterface.getInetAddresses(); enumerationIpAddr.hasMoreElements();) {
+					InetAddress inetAddress = enumerationIpAddr.nextElement();
+					//Filter out loopback address and other irrelevant ip addresses 
+					if (!inetAddress.isLoopbackAddress() && inetAddress.getAddress().length == 4) {
+						//Print the device ip address in to the text view 
+						tvServerIP.append(inetAddress.getHostAddress());
+					}
+				}
+			}
+		} catch (SocketException e) {
+			Log.e("ERROR:", e.toString());
+		}
+	}
+	// -------------------------------------------------------------------------
+	// onCreateOptionsMenu
+	// -------------------------------------------------------------------------
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
 		return true;
 	}
 
+	// -------------------------------------------------------------------------
+	// onOptionsItemSelected
+	// -------------------------------------------------------------------------	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
 		int id = item.getItemId();
 		if (id == R.id.action_settings) {
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}
-	
-	private void CheckBTState() {
-	    // Check for Bluetooth support and then check to make sure it is turned on
-	 
-	    // Emulator doesn't support Bluetooth and will return null
-	    if(btAdapter==null) { 
-	      AlertBox("Fatal Error", "Bluetooth Not supported. Aborting.");
-	    } else {
-	      if (btAdapter.isEnabled()) {
-	        out.append("\n...Bluetooth is enabled...");
-	      } else {
-	        //Prompt user to turn on Bluetooth
-	        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-	        startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-	      }
-	    }
-	  }
-	   
-	  public void AlertBox( String title, String message ){
-	    new AlertDialog.Builder(this)
-	    .setTitle( title )
-	    .setMessage( message + " Press OK to exit." )
-	    .setPositiveButton("OK", new OnClickListener() {
-	        public void onClick(DialogInterface arg0, int arg1) {
-	          finish();
-	        }
-	    }).show();
-	  }
-	
+
+
+			
+
 }
+
+

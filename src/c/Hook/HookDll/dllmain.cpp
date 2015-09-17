@@ -53,6 +53,7 @@ SOCKET BTSocket = INVALID_SOCKET;
 SOCKET TCPSocket = INVALID_SOCKET;
 struct addrinfo *result = NULL;
 FILE*  pLogFile;
+bool    TCPSocketClosed = false;
 
 // DEBUG - change to true for functional run
 bool   BTConnect = false; // if false, using TCP connection
@@ -70,7 +71,7 @@ SOCKET WSAAPI MySocket(_In_ int af, _In_ int type, _In_ int protocol)
 		//MsgBox("TCP socket failed with error\n");
 		fprintf(pLogFile, "[MySocket]\t TCP socket failed with error\n");
 		WSACleanup();
-		return 1;
+		return -1;
 	}
 	else 
 		//MsgBox("TCP socket succeded");
@@ -81,7 +82,7 @@ SOCKET WSAAPI MySocket(_In_ int af, _In_ int type, _In_ int protocol)
 		//MsgBox("BT socket failed with error\n");
 		fprintf(pLogFile, "[MySocket]\t BT socket failed with error\n");
 		WSACleanup();
-		return 1;
+		return -1;
 	}
 	else 
 		//MsgBox("BT socket succeded");
@@ -99,7 +100,7 @@ int WINAPI MyConnect(_In_ SOCKET s, _In_ const struct sockaddr *name, _In_ int n
 
 	//MsgBox("HookDll : Entered MyConnect");
 
-	server.sin_addr.s_addr = inet_addr("132.68.50.184");
+	server.sin_addr.s_addr = inet_addr("132.68.50.102");
 	server.sin_family = AF_INET;
 	server.sin_port = htons(4020);
 
@@ -115,10 +116,11 @@ int WINAPI MyConnect(_In_ SOCKET s, _In_ const struct sockaddr *name, _In_ int n
 		iResult = pConnect(TCPSocket, (struct sockaddr *)&server, sizeof(server));
 		if (iResult < 0) {
 			pClosesocket(TCPSocket);
+			TCPSocketClosed = true;
 			//MsgBox("Connect failed with error \n");
 			fprintf(pLogFile, "[MyConnect]\t TCP Connect failed\n");
 			WSACleanup();
-			return 1;
+			return -1;
 		}
 		else {
 			fprintf(pLogFile, "[MyConnect]\t BT Connect succeded\n");
@@ -148,9 +150,10 @@ int WINAPI MySend(SOCKET s, const char* buf, int len, int flags)
 		if (iResult == SOCKET_ERROR) {
 			//MsgBox("send failed with error: \n");
 			fprintf(pLogFile, "[MySend]\t TCP send failed with error %d\n", iResult);
+			TCPSocketClosed = 1;
 			pClosesocket(TCPSocket);
 			WSACleanup();
-			return 1;
+			return -1;
 		}
 		else
 			//MsgBox("send succeded");
@@ -161,9 +164,10 @@ int WINAPI MySend(SOCKET s, const char* buf, int len, int flags)
 		if (iResult == SOCKET_ERROR) {
 			//MsgBox("send failed with error: \n");
 			fprintf(pLogFile, "[MySend]\t BT send failed with error %d\n", iResult);
+			TCPSocketClosed = 1;
 			pClosesocket(TCPSocket);
 			WSACleanup();
-			return 1;
+			return -1;
 		}
 		else
 			//MsgBox("send succeded");
@@ -179,8 +183,10 @@ int WINAPI MyClosesocket(_In_ SOCKET s)
 	//MsgBox("HookDll : Entered MyClosesocket");
 	fopen_s(&pLogFile, "C:\\Users\\Itay\\Documents\\Log.txt", "a+");
 
-	int res1 = pClosesocket(TCPSocket);
-	int res2 = pClosesocket(BTSocket);
+	int res1;
+	res1 = TCPSocketClosed? 0 : pClosesocket(TCPSocket); // close socket only if it wasn't closed already
+	int res2; 
+	res2 = pClosesocket(BTSocket);
 
 	fprintf(pLogFile, "[MyClosesocket]\t Sockets closed - %d, %d (zeros are successes)\n", res1, res2);
 	iResult = shutdown(TCPSocket, SD_SEND);
