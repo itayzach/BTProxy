@@ -56,7 +56,7 @@ FILE*  pLogFile;
 bool    TCPSocketClosed = false;
 
 // DEBUG - change to true for functional run
-bool   BTConnect = false; // if false, using TCP connection
+bool   BTConnect = true; // false; // if false, using TCP connection
 
 // =============================================================================
 // Hooked functions
@@ -100,7 +100,7 @@ int WINAPI MyConnect(_In_ SOCKET s, _In_ const struct sockaddr *name, _In_ int n
 
 	//MsgBox("HookDll : Entered MyConnect");
 
-	server.sin_addr.s_addr = inet_addr("132.68.50.102");
+	server.sin_addr.s_addr = inet_addr("132.68.50.44");
 	server.sin_family = AF_INET;
 	server.sin_port = htons(4020);
 

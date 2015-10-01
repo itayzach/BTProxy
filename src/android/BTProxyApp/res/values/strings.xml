@@ -3,9 +3,11 @@
 
     <string name="app_name">BTProxyApp</string>
     <string name="tcpServerIP">TCP Server IP : </string>
+    <string name="btFoundDevice">Found BT Server : </string>
     <string name="action_settings">Settings</string>
-    <string name="clientMsg">&quot;client message : &quot;</string>
+    <string name="clientMsg"></string>
     <string name="tcpServerPort">TCP Server Port : </string>
     <string name="restartServer">Restart TCP server</string>
+    <string name="close">Close</string>
 
 </resources>

@@ -19,7 +19,7 @@ int __cdecl main(int argc, char **argv)
     WSADATA 		wsaData;
     SOCKET 			LocalSocket 			= INVALID_SOCKET;
 	SOCKADDR_BTH    SockAddrBthServer;
-	char 			*sendbuf 				= "Message from BT Client";
+	char 			*sendbuf 				= "Message from BT Client abcdefghijklmnopqrstuvwxyz0123456789\n";
 	int 			iResult;
 	
  	// =========================================
