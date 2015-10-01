@@ -8,21 +8,47 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="il.ac.technion.nssl.btproxy.btserver.MainActivity" >
 
-    <TextView
-        android:id="@+id/textViewClientMsg"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:text="@string/msgs_from_client" />
+        android:orientation="vertical" >
 
-    <Button
-        android:id="@+id/btnRestart"
-        android:layout_width="wrap_content"
+        <TextView
+            android:id="@+id/textViewBTname"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/btServerName"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+
+        <TextView
+            android:id="@+id/textViewBTaddr"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="@string/btServerAddr"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="126dp"
-        android:text="@string/restartServer" />
+        android:layout_alignParentStart="true"
+        android:orientation="vertical" >
+
+        <ImageView
+            android:id="@+id/imageView1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:src="@drawable/bluetooth" />
+
+        <Button
+            android:id="@+id/btnRestart"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/restartServer" />
+
+    </LinearLayout>
 
 </RelativeLayout>

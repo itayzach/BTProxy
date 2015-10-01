@@ -3,7 +3,8 @@
 
     <string name="app_name">BTServer</string>
     <string name="action_settings">Settings</string>
-    <string name="msgs_from_client"> Message from client: </string>
+    <string name="btServerName">BT Server Name :</string>
+    <string name="btServerAddr">BT Server Address :</string>
     <string name="restartServer"> Restart Server </string>
     
 </resources>

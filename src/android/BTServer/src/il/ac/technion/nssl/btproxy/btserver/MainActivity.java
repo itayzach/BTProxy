@@ -1,14 +1,17 @@
 package il.ac.technion.nssl.btproxy.btserver;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStreamWriter;
+import java.io.InputStreamReader;
 import java.util.UUID;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -18,30 +21,38 @@ import android.widget.TextView;
 public class MainActivity extends Activity {
 	
 	private static final int DISCOVERABLE_REQUEST_CODE = 0x1;
-	private boolean CONTINUE_READ_WRITE = true;
-	private TextView tvClientMsg;
+	final Context context = this;
 	private Button btnRestartServer;
+	private TextView tvBTServerName;
+	private TextView tvBTServerAddr;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		tvClientMsg = (TextView) findViewById(R.id.textViewClientMsg);
+		tvBTServerName = (TextView) findViewById(R.id.textViewBTname);
+		tvBTServerAddr = (TextView) findViewById(R.id.textViewBTaddr);		
 		btnRestartServer = (Button) findViewById(R.id.btnRestart);
+		final String initBTServerNameString = (String) tvBTServerName.getText();
+		final String initBTServerAddrString = (String) tvBTServerAddr.getText();
 		btnRestartServer.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				android.util.Log.e("TrackingFlow", "Restarting BT server...");
-				if(socket != null){
-					try{
-						is.close();
-						os.close();
+				try{
+					if(socket != null){
 						socket.close();
-					}catch(Exception e){}
+					}
+					if (serverSocket != null) {
+						serverSocket.close();
+					}
+				} catch(Exception e) {
+					android.util.Log.e("TrackingFlow", "onClick exception when closing sockets: " + e.getMessage());
 				}
-				finish();
-				Intent intent = new Intent(MainActivity.this, MainActivity.class);
-		        startActivity(intent);
+				tvBTServerName.setText(initBTServerNameString);
+				tvBTServerAddr.setText(initBTServerAddrString);
+				Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+				startActivityForResult(discoverableIntent, DISCOVERABLE_REQUEST_CODE);
 			}
 		});
 		//Always make sure that Bluetooth server is discoverable during listening...
@@ -59,65 +70,67 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		if(socket != null){
-			try{
-				is.close();
-				os.close();
+		try{
+			if(socket != null){
 				socket.close();
-			}catch(Exception e){}
-			CONTINUE_READ_WRITE = false;
+			}
+			if (serverSocket != null) {
+				serverSocket.close();
+			}
+		} catch(Exception e) {
+			android.util.Log.e("TrackingFlow", "onDestroy exception when closing sockets: " + e.getMessage());
 		}
 	}
 	
 	private BluetoothSocket socket;
-	private InputStream is;
-	private OutputStreamWriter os;
+	private BluetoothServerSocket serverSocket;
 	private Runnable reader = new Runnable() {
 		public void run() {
-			BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
-			//UUID uuid = UUID.fromString("4e5d48e0-75df-11e3-981f-0800200c9a66");
+			final BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
 			UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					tvBTServerName.append("\n" + adapter.getName());
+					tvBTServerAddr.append("\n" + adapter.getAddress());
+				}
+			});
 			try {
-				BluetoothServerSocket serverSocket = adapter.listenUsingRfcommWithServiceRecord("BLTServer", uuid);
+				serverSocket = adapter.listenUsingRfcommWithServiceRecord("BLTServer", uuid);
 				android.util.Log.e("TrackingFlow", "Listening...");
 				socket = serverSocket.accept();
-				android.util.Log.e("TrackingFlow", "Socket accepted...");
-				is = socket.getInputStream();
-				//os = new OutputStreamWriter(socket.getOutputStream());
-				//new Thread(writter).start();
+				android.util.Log.e("TrackingFlow", "Socket accepted...");				
+				BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+				final StringBuilder sb = new StringBuilder();
+				String result = in.readLine() + System.getProperty("line.separator");
+				android.util.Log.e("TrackingFlow", "after read");
+				sb.append(result);
 				
-				int bufferSize = 1024;
-				int bytesRead = -1;
-				byte[] buffer = new byte[bufferSize];
-				//Keep reading the messages while connection is open...
-				while(CONTINUE_READ_WRITE){
-					android.util.Log.e("TrackingFlow", "CONTINUE_READ_WRITE");
-					final StringBuilder sb = new StringBuilder();
-					android.util.Log.e("TrackingFlow", "before first read");
-					bytesRead = is.read(buffer);
-					android.util.Log.e("TrackingFlow", "after first read");
-					if (bytesRead != -1) {
-						String result = "";
-						while ((bytesRead == bufferSize) && (buffer[bufferSize-1] != 0)){
-							result = result + new String(buffer, 0, bytesRead - 1);
-							bytesRead = is.read(buffer);
-							android.util.Log.e("TrackingFlow", "reading: " + sb.toString());
-						}
-						result = result + new String(buffer, 0, bytesRead - 1);
-						sb.append(result);
-						android.util.Log.e("TrackingFlow", "result: " + sb.toString());
+				//Show message on UIThread
+				runOnUiThread(new Runnable() {	
+					@Override
+					public void run() {
+						AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
+						alertDialogBuilder.setTitle("Message from BT client");
+						alertDialogBuilder.setMessage(sb.toString());
+						alertDialogBuilder.setCancelable(true);
+						alertDialogBuilder.setNeutralButton("Close", new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog,int id) {
+								// if this button is clicked, just close
+								// the dialog box and do nothing
+								dialog.cancel();
+							}
+						});
+						// create alert dialog
+						AlertDialog alertDialog = alertDialogBuilder.create();
+						// show it
+						alertDialog.show();
 					}
-					android.util.Log.e("TrackingFlow", "Read: " + sb.toString());
-					
-					//Show message on UIThread
-					runOnUiThread(new Runnable() {	
-						@Override
-						public void run() {
-							tvClientMsg.append(sb.toString());
-						}
-					});
-					//CONTINUE_READ_WRITE = false;
-				}
+				});
+				
+				in.close();
+				socket.close();
+				android.util.Log.e("TrackingFlow", "closed socket");
 			} catch (IOException e) {
 				android.util.Log.e("TrackingFlow", "got IOException : " + e.getMessage());
 			}
