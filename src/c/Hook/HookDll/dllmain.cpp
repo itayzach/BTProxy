@@ -100,7 +100,7 @@ int WINAPI MyConnect(_In_ SOCKET s, _In_ const struct sockaddr *name, _In_ int n
 
 	//MsgBox("HookDll : Entered MyConnect");
 
-	server.sin_addr.s_addr = inet_addr("132.68.50.44");
+	server.sin_addr.s_addr = inet_addr("132.68.60.117");
 	server.sin_family = AF_INET;
 	server.sin_port = htons(4020);
 
@@ -145,6 +145,24 @@ int WINAPI MySend(SOCKET s, const char* buf, int len, int flags)
 	fopen_s(&pLogFile, "C:\\Users\\Itay\\Documents\\Log.txt", "a+");
 	
 	if (!BTConnect) {
+		// First send the id ("windspc") to server
+		const char* id = "windspc";
+		iResult = pSend(TCPSocket, id, strlen(id), 0);
+
+		// DEBUG - iResult = pSend(TCPSocket, msg, strlen(msg), flags);
+		if (iResult == SOCKET_ERROR) {
+			//MsgBox("send failed with error: \n");
+			fprintf(pLogFile, "[MySend]\t TCP send of the id failed with error %d\n", iResult);
+			TCPSocketClosed = 1;
+			pClosesocket(TCPSocket);
+			WSACleanup();
+			return -1;
+		}
+		else
+			//MsgBox("send succeded");
+			fprintf(pLogFile, "[MySend]\t TCP send of the id succeeded. id = %s, iResult =  %d\n", id, iResult);
+
+		// After id was sent, send the message
 		iResult = pSend(TCPSocket, buf, strlen(buf), flags);
 		// DEBUG - iResult = pSend(TCPSocket, msg, strlen(msg), flags);
 		if (iResult == SOCKET_ERROR) {
